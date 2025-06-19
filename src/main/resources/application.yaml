@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: demo_singleton
+  ai:
+    dashscope:
+      chat:
+        options:
+          model: qwen-max
