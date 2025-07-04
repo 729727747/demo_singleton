@@ -1,8 +1,17 @@
+server:
+  port: 8181
+
 spring:
   application:
     name: demo_singleton
-  ai:
-    dashscope:
-      chat:
-        options:
-          model: qwen-max
+#  ai:
+#    dashscope:
+#      chat:
+#        options:
+#          model: qwen-max
+
+minio:
+  endpoint: http://120.46.206.116:9000  # MinIO API端口9000   控制台端口9001
+  access-key: admin            # 访问密钥（同控制台账号）
+  secret-key: yanju147258369            # 密钥
+  bucket: demo

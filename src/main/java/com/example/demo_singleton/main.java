@@ -28,7 +28,7 @@ public class main {
         return gen.call(param);
     }
     public static void main(String[] args) {
-        test1();
+//        test1();
     }
 
     private static void test1() {
