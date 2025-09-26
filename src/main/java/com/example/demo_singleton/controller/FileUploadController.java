@@ -2,10 +2,9 @@ package com.example.demo_singleton.controller;
 
 import com.example.demo_singleton.config.MinioClientConfig;
 import com.example.demo_singleton.prop.MinioProperties;
-import io.minio.GetObjectArgs;
-import io.minio.GetPresignedObjectUrlArgs;
-import io.minio.PutObjectArgs;
+import io.minio.*;
 import io.minio.http.Method;
+import io.minio.messages.Part;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,27 +32,7 @@ public class FileUploadController {
     private final String CHUNK_DIR = "uploads/chunks/";
     private final String FINAL_DIR = "uploads/final/";
 
-    /**
-     * 初始化上传
-     * @param fileName 文件名
-     * @param fileMd5 文件唯一标识
-     */
-    @PostMapping("/init")
-    public ResponseEntity<String> initUpload(
-            @RequestParam String fileName,
-            @RequestParam String fileMd5){
 
-        // 创建分块临时目录
-        String uploadId = UUID.randomUUID().toString();
-        Path chunkDir = Paths.get(CHUNK_DIR, fileMd5 + "_" + uploadId);
-        try {
-            Files.createDirectories(chunkDir);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("创建目录失败");
-        }
-        return ResponseEntity.ok(uploadId);
-    }
 
     /**
      * 上传分块
@@ -100,6 +79,8 @@ public class FileUploadController {
 
         Arrays.sort(chunks, Comparator.comparingInt(f ->
                 Integer.parseInt(f.getName().split("_")[1].split("\\.")[0])));
+
+
 
         // 3. 合并文件
         Path finalPath = Paths.get(FINAL_DIR, fileName);
@@ -164,7 +145,7 @@ public class FileUploadController {
     public Object upload(@RequestParam("file") MultipartFile file) {
         try (InputStream fileStream = file.getInputStream()){
             // 生成对象名称（例如：时间戳+原文件名）
-            String objectName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            String objectName = "/test1/test2/"+System.currentTimeMillis() + "_" + file.getOriginalFilename();
 
             // 上传文件到 MinIO
             minioClientConfig.getMinioClient().putObject(
@@ -191,5 +172,71 @@ public class FileUploadController {
             return "";
         }
     }
+
+
+
+
+// 修改分片上传方法
+@PostMapping("/multipart")
+public ResponseEntity<Map<String, Object>> multipartUpload(
+        @RequestParam("file") MultipartFile file,
+        @RequestParam int chunkIndex,
+        @RequestParam String uploadId,
+        @RequestParam String objectName) {
+
+    try {
+        // 创建临时文件保存分片
+        Path tempFile = Files.createTempFile("minio-chunk", ".tmp");
+        file.transferTo(tempFile);
+
+        ObjectWriteResponse response = minioClientConfig.getMinioClient().uploadObject(
+            UploadObjectArgs.builder()
+                .bucket(minioProperties.getBucket())
+                .object(objectName)
+//                .uploadId(uploadId)  // 使用MinIO生成的合法ID
+//                .partNumber(chunkIndex + 1)
+                .filename(tempFile.toString())  // 使用临时文件路径
+                .build());
+
+        Files.delete(tempFile);  // 清理临时文件
+        // ... 剩余代码不变 ...
+    } catch (Exception e) {
+        // ... 异常处理 ...
+    }
+    return null;
+}
+
+// 修改初始化方法
+@PostMapping("/init")
+public ResponseEntity<String> initUpload(
+        @RequestParam String fileName,
+        @RequestParam String fileMd5) {
+
+    try {
+        // 手动生成合法的上传ID（适用于旧版SDK）
+        String uploadId = UUID.randomUUID().toString();
+
+        // 验证存储桶存在
+        boolean isExist = minioClientConfig.getMinioClient().bucketExists(
+            BucketExistsArgs.builder()
+                .bucket(minioProperties.getBucket())
+                .build()
+        );
+
+        if (!isExist) {
+            minioClientConfig.getMinioClient().makeBucket(
+                MakeBucketArgs.builder()
+                    .bucket(minioProperties.getBucket())
+                    .build()
+            );
+        }
+
+        return ResponseEntity.ok(uploadId);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("初始化上传失败");
+    }
+}
+
 
 }

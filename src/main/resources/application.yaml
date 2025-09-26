@@ -4,11 +4,30 @@ server:
 spring:
   application:
     name: demo_singleton
+  redis:
+    host: 120.46.206.116
+    port: 6379
+    password: yanju147258369
+    database: 0
+    timeout: 10000
+    lettuce:
+      pool:
+        max-active: 8
+        max-wait: -1ms
+
 #  ai:
 #    dashscope:
 #      chat:
 #        options:
 #          model: qwen-max
+  #配置rabbitMq 服务器
+  rabbitmq:
+    host: 120.46.206.116
+    port: 5672
+    username: guest
+    password: guest
+    #虚拟host 可以不设置,使用server默认host
+    #virtual-host: JCcccHost
 
 minio:
   endpoint: http://120.46.206.116:9000  # MinIO API端口9000   控制台端口9001

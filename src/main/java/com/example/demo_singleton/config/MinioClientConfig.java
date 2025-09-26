@@ -19,6 +19,9 @@ public class MinioClientConfig {
 
     @PostConstruct
     public void init() throws Exception {
+
+
+
         // 创建 MinIO 客户端
         minioClient = MinioClient.builder()
                 .endpoint(properties.getEndpoint())

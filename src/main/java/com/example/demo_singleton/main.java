@@ -11,6 +11,8 @@ import com.alibaba.dashscope.exception.ApiException;
 import com.alibaba.dashscope.exception.InputRequiredException;
 import com.alibaba.dashscope.exception.NoApiKeyException;
 import java.util.Scanner;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class main {
     public static GenerationParam createGenerationParam(List<Message> messages) {
@@ -29,6 +31,28 @@ public class main {
     }
     public static void main(String[] args) {
 //        test1();
+
+
+//        testRecord();
+        
+        testFunction(new Person("张三", "男"), person -> person.name() + "是" + person.gender(), System.out::println);
+
+    }
+
+    private static void testFunction(Person person, Function<Person, String> function, Consumer<String> consumer) {
+        String result = function.apply(person);
+        consumer.accept(result);
+        Consumer<String> stringConsumer = consumer.andThen(System.out::println);
+        stringConsumer.accept(result);
+    }
+
+    private static void testRecord() {
+        Person person = new Person("", "");
+        person.validate();
+        System.out.println(person);
+        System.out.println(person.name());
+        System.out.println(person.gender());
+        person.play();
     }
 
     private static void test1() {
