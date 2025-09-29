@@ -24,8 +24,8 @@ spring:
   rabbitmq:
     host: 120.46.206.116
     port: 5672
-    username: guest
-    password: guest
+    username: admin
+    password: admin
     #虚拟host 可以不设置,使用server默认host
     #virtual-host: JCcccHost
 
